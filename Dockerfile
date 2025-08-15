@@ -1,15 +1,17 @@
 FROM ghcr.io/cloudnative-pg/postgresql:17.2
 USER root
 # Add Citus Data package repository
-# Install Citus extension
+# Install Citus extension and pg_partman
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl ca-certificates gnupg && \
     curl -s https://packagecloud.io/install/repositories/citusdata/community/script.deb.sh | bash && \
     apt-get update && \
-    apt-get install -y --no-install-recommends postgresql-17-citus-13.0 && \
+    apt-get install -y --no-install-recommends \
+    postgresql-17-citus-13.0 \
+    postgresql-17-partman && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-# Append the Citus configuration to the actual postgresql.conf file
-RUN echo "shared_preload_libraries = 'citus'" >> /var/lib/postgresql/data/postgresql.conf
+# Append the Citus and pg_partman configuration to the actual postgresql.conf file
+RUN echo "shared_preload_libraries = 'citus,pg_partman_bgw'" >> /var/lib/postgresql/data/postgresql.conf
 USER 26
