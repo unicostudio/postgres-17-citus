@@ -10,22 +10,27 @@ RUN apt-get update && \
     curl -s https://packagecloud.io/install/repositories/citusdata/community/script.deb.sh | bash && \
     apt-get update && \
     apt-get install -y --no-install-recommends postgresql-17-citus-13.0 && \
-    # Install pg_partman from source with proper compilation
+    # Install pg_partman from source
     cd /tmp && \
     git clone https://github.com/pgpartman/pg_partman.git && \
     cd pg_partman && \
-    # Ensure we're using the right PostgreSQL version
     export PG_CONFIG=/usr/bin/pg_config && \
     make clean && \
     make && \
     make install && \
-    # Verify the bgw library was installed
+    # Verify files were installed BEFORE cleanup
+    echo "=== Checking installed files ===" && \
     ls -la /usr/lib/postgresql/17/lib/pg_partman_bgw.so && \
+    ls -la /usr/share/postgresql/17/extension/pg_partman.control && \
+    # Clean up but be more careful about what we remove
     cd / && rm -rf /tmp/pg_partman && \
-    # Clean up build dependencies
-    apt-get remove -y git build-essential postgresql-server-dev-17 make && \
+    apt-get remove -y git build-essential make && \
+    # Keep postgresql-server-dev-17 and libpq-dev as they might be needed at runtime
     apt-get autoremove -y && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    # Final verification
+    echo "=== Final verification ===" && \
+    ls -la /usr/lib/postgresql/17/lib/pg_partman_bgw.so
 
 USER 26
